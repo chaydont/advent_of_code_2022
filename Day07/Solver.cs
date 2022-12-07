@@ -60,15 +60,9 @@ public class Solver {
             }
         }
 
-        Part1 = directories.Where(x => x.Value <= 100_000).Sum(x => x.Value);
-
-        int a = int.MaxValue;
         int requiredSpace = 30_000_000 - (70_000_000 - directories["/"]);
-        foreach ((_, int size) in directories) {
-            if (size > requiredSpace) {
-                a = Math.Min(a, size);
-            }
-        }
-        Part2 = a;
+
+        Part1 = directories.Where(x => x.Value <= 100_000).Sum(x => x.Value);
+        Part2 = directories.Select(dir => dir.Value).Where(size => size > requiredSpace).Min();
     }
 }
