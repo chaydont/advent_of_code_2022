@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Day07;
 
@@ -7,20 +6,14 @@ public class Solver {
     public int Part1 { get; }
     public int Part2 { get; }
 
-    private static string GetPath(Stack<string> currentPath, string dir) {
-        StringBuilder builder = new();
-        bool inside = false;
-        foreach (string path in currentPath) {
-            if (path == dir) {
-                inside = true;
-            }
-
-            if (inside) {
-                builder.Insert(0, path + "/");
-            }
+    private static List<string> GetDirectories(Stack<string> path) {
+        List<string> result = new();
+        string current = "";
+        foreach (string dir in path.Reverse()) {
+            current += dir;
+            result.Add(current);
         }
-
-        return builder.ToString();
+        return result;
     }
 
     public Solver(string input) {
@@ -53,12 +46,11 @@ public class Solver {
                         if (!line.StartsWith("dir")) {
                             Regex regex = new("(?<size>[\\d]+) .*");
                             int size = int.Parse(regex.Match(line).Groups["size"].Value);
-                            foreach (string dir in currentPath) {
-                                string path = GetPath(currentPath, dir);
-                                if (!directories.ContainsKey(path)) {
-                                    directories[path] = size;
+                            foreach (string directory in GetDirectories(currentPath)) {
+                                if (!directories.ContainsKey(directory)) {
+                                    directories[directory] = size;
                                 } else {
-                                    directories[path] += size;
+                                    directories[directory] += size;
                                 }
                             }
                         }
@@ -68,15 +60,9 @@ public class Solver {
             }
         }
 
-        int a = 0;
-        foreach ((string name, int size) in directories) {
-            if (size <= 100_000) {
-                a += size;
-                Console.WriteLine($"name: {name} | size: {size} | total: {a}");
-            }
-        }
-        
-        Part1 = directories.Where(x => x.Value <= 100_000).Sum(x => x.Value);;
-        Part2 = 0;
+        int requiredSpace = 30_000_000 - (70_000_000 - directories["/"]);
+
+        Part1 = directories.Where(x => x.Value <= 100_000).Sum(x => x.Value);
+        Part2 = directories.Select(dir => dir.Value).Where(size => size > requiredSpace).Min();
     }
 }
