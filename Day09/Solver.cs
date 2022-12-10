@@ -7,12 +7,15 @@ public class Solver {
     public int Part1 { get; }
     public int Part2 { get; }
 
+    private const int ROPE_LENGTH = 9;
+    
     public Solver(string input) {
 
         Coord head = new(0, 0);
-        Tail tail = new(0, 0);
-
-        HashSet<Coord> a = new();
+        List<Tail> rope = new();
+        for (int i = 0; i < ROPE_LENGTH; i++) {
+            rope.Add(new Tail(0, 0));
+        }
         
         using StreamReader file = new(input);
         while (file.ReadLine() is { } line) {
@@ -20,9 +23,7 @@ public class Solver {
             Match match = regex.Match(line);
             string direction = match.Groups["direction"].Value;
             int n = int.Parse(match.Groups["n"].Value);
-            
-            Console.WriteLine(line);
-            for (int i = 0; i < n; i++) {
+            for (int _ = 0; _ < n; _++) {
                 switch (direction) {
                     case "U":
                         head.y++;
@@ -37,13 +38,16 @@ public class Solver {
                         head.x++;
                         break;
                 }
-                tail.Follow(head);
-                Console.WriteLine($"{head.x} - {head.y}");
-                Console.WriteLine($"{tail.x} - {tail.y}");
-                Console.WriteLine();
+
+                Coord last = head;
+                for (int i = 0; i < ROPE_LENGTH; i++) {
+                    rope[i].Follow(last);
+                    last = rope[i];
+                }
             }
         }
-        Part1 = tail.GetHistoryLength();
+        Part1 = rope[0].GetHistoryLength();
+        Part2 = rope[ROPE_LENGTH - 1].GetHistoryLength();
     }
 }
 
@@ -55,10 +59,6 @@ public class Coord {
         this.x = x;
         this.y = y;
     }
-
-    public int Distance(Coord other) {
-        return Math.Max(Math.Abs(other.x - x), Math.Abs(other.y - y));
-    }
 }
 
 public class Tail : Coord {
@@ -66,25 +66,25 @@ public class Tail : Coord {
     private readonly HashSet<int> history;
 
     public Tail(int x, int y) : base(x, y) {
-        history = new HashSet<int>();
+        history = new HashSet<int> { 0 };
     }
 
     public void Follow(Coord other) {
-        int distance = Distance(other);
-        if (distance > 1) {
-            if (x - other.x == distance) {
-                x--;
-            } else if (other.x - x == distance) {
+        if (Math.Abs(x - other.x) >= 2 || Math.Abs(y - other.y) >= 2) {
+            if (x < other.x) {
                 x++;
+            } else if (x > other.x) {
+                x--;
             }
-            if (y - other.y == distance) {
-                y--;
-            } else if (other.y - y == distance) {
+
+            if (y < other.y) {
                 y++;
+            } else if (y > other.y) {
+                y--;
             }
             history.Add(y * 10_000 + x);
         }
-    }
+}
     
     public int GetHistoryLength() {
         return history.Count;
